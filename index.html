@@ -14,9 +14,46 @@
         .tile-card { cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; min-height: 180px; }
         .tile-card:hover { transform: translateY(-3px); box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2) !important; }
         .sidebar { position: sticky; top: 0; height: 100vh; }
-        .modal-fullscreen-lg-down { --bs-modal-width: 95vw; --bs-modal-margin: 1.75rem auto; max-width: var(--bs-modal-width); height: 95vh; }
-        .modal-body-iframe { padding: 0; height: calc(100vh - 120px); }
-        .modal-body-iframe iframe { width: 100%; height: 100%; border: none; }
+        
+        /* New styles for the extended content column */
+        #extended-content-panel {
+            overflow-y: auto; 
+            max-height: 100vh;
+            position: sticky; 
+            top: 0;
+            padding-bottom: 20px !important;
+        }
+        
+        /* Ensures content loads cleanly */
+        #extended-content-panel .content-wrapper {
+            background-color: var(--bs-body-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        /* Responsive scaling */
+        #extended-content-panel img { max-width: 100%; height: auto; }
+        #extended-content-panel table { width: 100%; }
+
+        /* Hide the extended view on small screens to avoid squishing */
+        @media (max-width: 991.98px) {
+            #extended-content-panel {
+                position: relative;
+                max-height: none;
+                order: 3;
+                width: 100%;
+                padding: 0 1rem;
+            }
+            #main-content-area {
+                order: 2;
+            }
+            /* Main content area takes full width when extended panel is shown on small screen */
+            #main-content-area.col-md-6 { 
+                width: 100% !important; 
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -49,7 +86,7 @@
                 </div>
             </nav>
 
-            <main class="col-md-9 ms-sm-auto col-lg-10 p-4">
+            <main id="main-content-area" class="col-md-9 col-lg-10 p-4">
                 <header class="pb-4 mb-4 border-bottom d-block d-md-none">
                      <h1 class="h3 mb-0 text-primary">🛠 Tools Hub</h1>
                 </header>
@@ -63,20 +100,15 @@
                 </div>
 
             </main>
-        </div>
-    </div>
-    
-    <div class="modal fade" id="contentModal" tabindex="-1" aria-labelledby="contentModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="contentModalLabel">Procedure Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body modal-body-iframe">
-                    <iframe id="procedureIframe" src="" title="Procedure Content"></iframe>
-                </div>
-            </div>
+            
+            <aside id="extended-content-panel" class="d-none col-lg-5 p-4 border-start">
+                <h3 class="mb-3 text-primary" id="extended-title"></h3>
+                <button id="close-extended-view" class="btn btn-sm btn-outline-secondary mb-3 d-lg-none" type="button">
+                    <span class="me-2">&larr;</span> Back to Tiles
+                </button>
+                <div id="content-container">
+                    </div>
+            </aside>
         </div>
     </div>
 
@@ -88,18 +120,31 @@
             const sectionNav = document.getElementById('section-nav');
             const mainTitle = document.getElementById('main-content-title');
             const loadingMessage = document.getElementById('loading-message');
-            
-            // Path confirmed as 'pages.json' in the root directory
+            const mainContentArea = document.getElementById('main-content-area');
+            const extendedPanel = document.getElementById('extended-content-panel');
+            const contentContainer = document.getElementById('content-container');
+            const extendedTitle = document.getElementById('extended-title');
+            const closeButton = document.getElementById('close-extended-view');
+
             const dataFile = 'pages.json'; 
+
+            // Function to reset the layout to only show tiles
+            const resetLayout = () => {
+                mainContentArea.className = 'col-md-9 col-lg-10 p-4';
+                extendedPanel.classList.add('d-none');
+                extendedPanel.classList.remove('col-md-6', 'col-lg-5');
+                contentContainer.innerHTML = '';
+            };
+            
+            closeButton.addEventListener('click', resetLayout);
 
             // 1. Fetch the JSON data
             fetch(dataFile)
                 .then(response => {
                     if (!response.ok) {
-                        // This handles HTTP errors (404, etc.)
-                        throw new Error(`Error: Could not load ${dataFile}. Status: ${response.status}`);
+                        throw new Error(`HTTP Error: Could not load ${dataFile}. Status: ${response.status}`);
                     }
-                    return response.json(); // This handles JSON syntax errors
+                    return response.json();
                 })
                 .then(procedureData => {
                     loadingMessage.style.display = 'none';
@@ -116,10 +161,10 @@
                     procedureData.forEach(item => {
                         uniqueSections.add(item.section);
                         
-                        // Tile HTML generation (Small View)
+                        // Tile HTML generation (Small View) - data-url now used for fetching
                         const tileHtml = `
                             <div class="col tile-item" data-section="${item.section.replace(/\s/g, '-').toLowerCase()}">
-                                <div class="card tile-card shadow h-100" data-bs-toggle="modal" data-bs-target="#contentModal" data-url="${item.file}">
+                                <div class="card tile-card shadow h-100" data-url="${item.file}" data-title="${item.title}">
                                     <div class="card-body">
                                         <h5 class="card-title text-primary">${item.title}</h5>
                                         <h6 class="card-subtitle mb-2 text-muted">Section: ${item.section}</h6>
@@ -137,7 +182,7 @@
                         tileContainer.insertAdjacentHTML('beforeend', tileHtml);
                     });
 
-                    // 3. Generate Navigation Links (Filtering)
+                    // 3. Generate Navigation Links (Filtering) - Logic remains the same
                     const allProceduresLink = `<li class="nav-item"><a class="nav-link active filter-link" aria-current="page" href="#" data-section="all"><span class="me-2">&#x23EC;</span> All Procedures</a></li>`;
                     sectionNav.insertAdjacentHTML('beforeend', allProceduresLink);
 
@@ -147,10 +192,11 @@
                         sectionNav.insertAdjacentHTML('beforeend', navItem);
                     });
                     
-                    // 4. Implement Filtering Logic
+                    // 4. Filtering Logic - Logic remains the same
                     document.querySelectorAll('.filter-link').forEach(link => {
                         link.addEventListener('click', function(e) {
                             e.preventDefault();
+                            resetLayout(); // Reset the view when filtering
                             document.querySelectorAll('.filter-link').forEach(l => l.classList.remove('active'));
                             this.classList.add('active');
                             
@@ -168,31 +214,65 @@
                         });
                     });
 
+                    // 5. NEW: Extended View Logic (Loads Content into a Column)
+                    document.querySelectorAll('.tile-card').forEach(tile => {
+                        tile.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            
+                            const url = this.getAttribute('data-url');
+                            const title = this.getAttribute('data-title');
+                            
+                            extendedTitle.textContent = title;
+                            contentContainer.innerHTML = '<div class="content-wrapper text-center text-muted">Loading content...</div>';
+
+                            // 5.1. Update the layout
+                            // Shrink Tiles column
+                            mainContentArea.className = 'col-md-9 col-lg-5 p-4'; 
+                            // Show Extended View column
+                            extendedPanel.className = 'col-md-9 col-lg-5 p-4 border-start'; 
+                            
+                            // 5.2. Fetch content and inject
+                            fetch(url)
+                                .then(response => {
+                                    if (!response.ok) {
+                                        throw new Error(`File Not Found: ${url}`);
+                                    }
+                                    return response.text();
+                                })
+                                .then(html => {
+                                    // Use DOMParser to safely extract only the content wrapper
+                                    const parser = new DOMParser();
+                                    const doc = parser.parseFromString(html, 'text/html');
+                                    // Assumes your content is wrapped in <div class="content-wrapper">...</div>
+                                    const contentWrapper = doc.querySelector('.content-wrapper');
+
+                                    if (contentWrapper) {
+                                        // The outer div is needed for styling/scrolling
+                                        contentContainer.innerHTML = `<div class="content-wrapper">${contentWrapper.innerHTML}</div>`;
+                                        extendedPanel.scrollTo(0, 0); 
+                                    } else {
+                                        contentContainer.innerHTML = `<div class="content-wrapper text-danger">Error: Could not find content wrapper in ${url}. Please wrap the content in your HTML file with <code>&lt;div class="content-wrapper"&gt;...&lt;/div&gt;</code>.</div>`;
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Content Load Error:', error);
+                                    contentContainer.innerHTML = `<div class="content-wrapper text-danger">Error loading content: **${error.message}**. Check that the filename (<code>${url}</code>) is exactly correct (case-sensitive).</div>`;
+                                });
+                        });
+                    });
+
                 })
                 .catch(error => {
                     // This error message is visible in the main content area
-                    loadingMessage.innerHTML = `<span class="text-danger">**LOAD FAILED**: The hub could not read the data. Please ensure <code>pages.json</code> is in the root directory and contains **perfect** JSON syntax (check for missing commas, quotes, or brackets).</span>`;
                     console.error('Data Load Error:', error);
+                    let errorMessage = 'Could not load data. Check the browser console (F12) for the exact error.';
+                    if (error.message.includes('404')) {
+                         errorMessage = `**ERROR: File Not Found (404)**. Ensure your live file is named exactly <code>pages.json</code> (case-sensitive) in the root directory.`;
+                    } else if (error.message.includes('SyntaxError')) {
+                         errorMessage = `**ERROR: Invalid JSON Syntax**. Check <code>pages.json</code> for missing commas, quotes, or brackets.`;
+                    }
+                    loadingMessage.innerHTML = `<span class="text-danger">${errorMessage}</span>`;
                 });
-
-            // 5. Modal Logic for Extended View (Loads the external HTML file)
-            const contentModal = document.getElementById('contentModal');
-            const iframe = document.getElementById('procedureIframe');
-            const modalTitle = document.getElementById('contentModalLabel');
-
-            contentModal.addEventListener('show.bs.modal', function (event) {
-                const tile = event.relatedTarget;
-                const url = tile.getAttribute('data-url');
-                const title = tile.querySelector('.card-title').textContent;
-
-                modalTitle.textContent = title;
-                iframe.src = url; // Loads the file (Extended View)
-            });
-            
-            contentModal.addEventListener('hidden.bs.modal', function () {
-                iframe.src = ''; 
-                modalTitle.textContent = 'Procedure Details'; 
-            });
         });
     </script>
 </body>
