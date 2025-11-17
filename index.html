@@ -32,7 +32,6 @@
             top: 0;
             height: 100vh;
         }
-        /* Custom style for the large modal to fill the screen better */
         .modal-fullscreen-lg-down {
             --bs-modal-width: 95vw;
             --bs-modal-margin: 1.75rem auto;
@@ -41,6 +40,7 @@
         }
         .modal-body-iframe {
             padding: 0;
+            height: calc(100vh - 120px); /* Adjust height for header/footer */
         }
         .modal-body-iframe iframe {
             width: 100%;
@@ -56,13 +56,10 @@
             const getPreferredTheme = () => {
                 return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
             }
-
             const setTheme = (theme) => {
                 document.documentElement.setAttribute('data-bs-theme', theme);
             }
-
             setTheme(getPreferredTheme());
-
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
                  setTheme(e.matches ? 'dark' : 'light');
             });
@@ -76,13 +73,13 @@
                 <div class="position-sticky pt-3">
                     <h1 class="h4 mb-4 text-primary">🛠 Tools Hub</h1>
                     
-                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
-                        <span>Sections (Order/Filter)</span>
+                    <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted text-uppercase">
+                        <span>Sections (Filter)</span>
                     </h6>
                     <ul class="nav flex-column mb-2" id="section-nav">
                         <li class="nav-item">
-                            <a class="nav-link active" aria-current="page" href="#knowledge-base">
-                                <span class="me-2">&#x1F4DA;</span> Knowledge Base
+                            <a class="nav-link active filter-link" aria-current="page" href="#" data-section="all">
+                                <span class="me-2">&#x23EC;</span> All Procedures
                             </a>
                         </li>
                     </ul>
@@ -94,27 +91,13 @@
                      <h1 class="h3 mb-0 text-primary">🛠 Tools Hub</h1>
                 </header>
                 
-                <h2 class="mb-4" id="knowledge-base">Knowledge Base</h2>
+                <h2 class="mb-4" id="main-content-title">All Procedures</h2>
                 
                 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4" id="tile-container">
-                    
-                    <div class="col tile-item" data-section="Knowledge Base">
-                        <div class="card tile-card shadow h-100" data-bs-toggle="modal" data-bs-target="#contentModal" data-url="pages/knowledge_base_vs_code_organisation.html">
-                            <div class="card-body">
-                                <h5 class="card-title text-primary">VS Code Organisation</h5>
-                                <h6 class="card-subtitle mb-2 text-muted">Section: Knowledge Base</h6>
-                                <p class="card-text small mt-3">
-                                    <span class="badge bg-secondary me-2">Area: Development Tools</span><br>
-                                    <span class="text-muted">Last Updated: 17 Nov 2025</span>
-                                </p>
-                            </div>
-                            <div class="card-footer text-end">
-                                <small class="text-primary">View Procedure (Extended) &rarr;</small>
-                            </div>
-                        </div>
+                    <div id="loading-message" class="col-12 text-center text-muted">
+                        Loading procedures...
                     </div>
-                    
-                    </div>
+                </div>
 
             </main>
         </div>
@@ -137,39 +120,120 @@
     <script src="js/bootstrap.bundle.min.js"></script>
     
     <script>
-        // JavaScript to handle the extended view functionality
         document.addEventListener('DOMContentLoaded', function() {
-            var contentModal = document.getElementById('contentModal');
-            var iframe = document.getElementById('procedureIframe');
-            var modalTitle = document.getElementById('contentModalLabel');
+            const tileContainer = document.getElementById('tile-container');
+            const sectionNav = document.getElementById('section-nav');
+            const mainTitle = document.getElementById('main-content-title');
+            const loadingMessage = document.getElementById('loading-message');
+            const dataFile = 'pages/pages.json'; // The required manifest file
+
+            // 1. Fetch the JSON data
+            fetch(dataFile)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    loadingMessage.style.display = 'none'; // Hide loading message
+                    const uniqueSections = new Set();
+                    
+                    // Sort data by Section, then by Title for organization
+                    data.sort((a, b) => {
+                        if (a.section < b.section) return -1;
+                        if (a.section > b.section) return 1;
+                        if (a.title < b.title) return -1;
+                        if (a.title > b.title) return 1;
+                        return 0;
+                    });
+
+                    // 2. Generate Tiles and Collect Sections
+                    data.forEach(item => {
+                        // Add section to set for navigation generation
+                        uniqueSections.add(item.section);
+                        
+                        // Create HTML for the tile
+                        const tileHtml = `
+                            <div class="col tile-item" data-section="${item.section.replace(/\s/g, '-').toLowerCase()}">
+                                <div class="card tile-card shadow h-100" data-bs-toggle="modal" data-bs-target="#contentModal" data-url="${item.file}">
+                                    <div class="card-body">
+                                        <h5 class="card-title text-primary">${item.title}</h5>
+                                        <h6 class="card-subtitle mb-2 text-muted">Section: ${item.section}</h6>
+                                        <p class="card-text small mt-3">
+                                            <span class="badge bg-secondary me-2">Area: ${item.area}</span><br>
+                                            <span class="text-muted">Last Updated: ${item.date}</span>
+                                        </p>
+                                    </div>
+                                    <div class="card-footer text-end">
+                                        <small class="text-primary">View Procedure (Extended) &rarr;</small>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        tileContainer.insertAdjacentHTML('beforeend', tileHtml);
+                    });
+
+                    // 3. Generate Navigation Links (Filtering)
+                    uniqueSections.forEach(section => {
+                        const sectionId = section.replace(/\s/g, '-').toLowerCase();
+                        const navItem = `
+                            <li class="nav-item">
+                                <a class="nav-link filter-link" href="#" data-section="${sectionId}">
+                                    <span class="me-2">&#x1F4DA;</span> ${section}
+                                </a>
+                            </li>
+                        `;
+                        sectionNav.insertAdjacentHTML('beforeend', navItem);
+                    });
+                    
+                    // 4. Implement Filtering Logic
+                    document.querySelectorAll('.filter-link').forEach(link => {
+                        link.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            document.querySelectorAll('.filter-link').forEach(l => l.classList.remove('active'));
+                            this.classList.add('active');
+                            
+                            const filterSection = this.getAttribute('data-section');
+                            mainTitle.textContent = filterSection === 'all' ? 'All Procedures' : filterSection.replace(/-/g, ' ').toUpperCase().charAt(0) + filterSection.replace(/-/g, ' ').slice(1);
+                            
+                            document.querySelectorAll('.tile-item').forEach(tile => {
+                                const tileSection = tile.getAttribute('data-section');
+                                if (filterSection === 'all' || tileSection === filterSection) {
+                                    tile.style.display = 'block';
+                                } else {
+                                    tile.style.display = 'none';
+                                }
+                            });
+                        });
+                    });
+
+                })
+                .catch(error => {
+                    loadingMessage.innerHTML = `<span class="text-danger">Error loading procedures. Please ensure ${dataFile} exists and is valid.</span>`;
+                    console.error('Error fetching data:', error);
+                });
+
+            // 5. Modal Logic for Extended View
+            const contentModal = document.getElementById('contentModal');
+            const iframe = document.getElementById('procedureIframe');
+            const modalTitle = document.getElementById('contentModalLabel');
 
             contentModal.addEventListener('show.bs.modal', function (event) {
-                // Button that triggered the modal (the tile card)
-                var tile = event.relatedTarget;
+                const tile = event.relatedTarget;
                 
-                // Extract info from the tile's data attributes
-                var url = tile.getAttribute('data-url');
-                var title = tile.querySelector('.card-title').textContent;
+                // Get URL and Title from the tile's data attributes
+                const url = tile.getAttribute('data-url');
+                const title = tile.querySelector('.card-title').textContent;
 
-                // Update the modal title
                 modalTitle.textContent = title;
-
-                // Set the iframe source to load the external HTML file
-                iframe.src = url;
+                iframe.src = url; // Load the external HTML file
             });
             
-            // Clear the iframe source when the modal is closed to save memory/resources
             contentModal.addEventListener('hidden.bs.modal', function () {
-                iframe.src = '';
-                modalTitle.textContent = 'Procedure Details'; // Reset title
+                iframe.src = ''; 
+                modalTitle.textContent = 'Procedure Details'; 
             });
-
-            /* NOTE ON DYNAMIC TILE LOADING:
-                To fully implement the ordering/filtering based on the 'pages/' folder content 
-                (Section, Title, Date), a server-side script or a client-side JSON manifest 
-                is required to scan the folder and generate the HTML above.
-                This static code demonstrates the client-side interactivity correctly.
-            */
         });
     </script>
 </body>
