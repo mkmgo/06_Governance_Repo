@@ -68,7 +68,7 @@
             border-color: var(--accent-main);
         }
 
-        /* 3. Extended Content Panel (New Column) */
+        /* 3. Extended Content Panel (Side Column) */
         #extended-content-panel {
             overflow-y: auto; 
             max-height: 100vh;
@@ -82,7 +82,6 @@
         .content-wrapper {
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1); /* Slight lift */
             background-color: var(--bg-card); /* Inner content background */
             color: var(--text-main);
         }
@@ -92,14 +91,28 @@
             padding-bottom: 5px;
             margin-top: 1.5rem;
         }
+        .content-wrapper table { width: 100%; }
+        .content-wrapper img { max-width: 100%; height: auto; }
 
-        /* Responsive handling */
+
+        /* 4. CRITICAL MOBILE FIXES */
+        /* Hide the tile container and show the content container exclusively on small screens */
         @media (max-width: 991.98px) {
-            #extended-content-panel {
-                position: relative; max-height: none; order: 3; width: 100%; padding: 0 1rem;
+            #main-content-area.d-none-mobile {
+                display: none !important;
             }
-            #main-content-area { order: 2; }
-            #main-content-area.col-md-6 { width: 100% !important; }
+            #extended-content-panel {
+                /* Make it full height, relative positioning (not sticky) */
+                position: relative; 
+                max-height: none; 
+                order: 2; /* Order after the sidebar */
+                width: 100%; 
+                padding: 0 1rem;
+            }
+            #close-extended-view {
+                 /* Show on mobile view */
+                 display: block !important;
+            }
         }
 
     </style>
@@ -114,9 +127,7 @@
             const setTheme = (theme) => {
                 document.documentElement.setAttribute('data-bs-theme', theme);
             }
-            // Set initial theme
             setTheme(getPreferredTheme());
-            // Listen for changes
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
                  setTheme(e.matches ? 'dark' : 'light');
             });
@@ -128,7 +139,7 @@
             
             <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-none d-md-block sidebar p-3 border-end">
                 <div class="position-sticky pt-3">
-                    <h1 class="h4 mb-4" style="color: var(--accent-main);">🛠 Hub</h1>
+                    <h1 class="h4 mb-4" style="color: var(--accent-main);">🛠 Tools Hub</h1>
                     <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted text-uppercase">
                         <span>Sections (Filter)</span>
                     </h6>
@@ -138,7 +149,7 @@
 
             <main id="main-content-area" class="col-md-9 col-lg-10 p-4">
                 <header class="pb-4 mb-4 border-bottom d-block d-md-none">
-                     <h1 class="h3 mb-0" style="color: var(--accent-main);">🛠 Hub</h1>
+                     <h1 class="h3 mb-0" style="color: var(--accent-main);">🛠 Tools Hub</h1>
                 </header>
                 
                 <h2 class="mb-4" id="main-content-title">All Procedures</h2>
@@ -151,11 +162,11 @@
 
             </main>
             
-            <aside id="extended-content-panel" class="d-none col-lg-5 p-4 border-start">
-                <h3 class="mb-3" style="color: var(--accent-main);" id="extended-title"></h3>
-                <button id="close-extended-view" class="btn btn-sm mb-3 d-lg-none" style="color: var(--accent-main); border-color: var(--accent-main);" type="button">
+            <aside id="extended-content-panel" class="d-none col-12 col-lg-5 p-4 border-start">
+                <button id="close-extended-view" class="btn btn-sm mb-3 d-none" style="color: var(--accent-main); border-color: var(--accent-main);" type="button">
                     <span class="me-2">&larr;</span> Back to Tiles
                 </button>
+                <h3 class="mb-3" style="color: var(--accent-main);" id="extended-title"></h3>
                 <div id="content-container">
                     </div>
             </aside>
@@ -180,9 +191,13 @@
 
             // Function to reset the layout to only show tiles (Full Width)
             const resetLayout = () => {
+                // Restore main content area
                 mainContentArea.className = 'col-md-9 col-lg-10 p-4';
+                mainContentArea.classList.remove('d-none-mobile');
+                
+                // Hide extended panel
                 extendedPanel.classList.add('d-none');
-                extendedPanel.classList.remove('col-md-6', 'col-lg-5');
+                extendedPanel.classList.remove('col-lg-5');
                 contentContainer.innerHTML = '';
             };
             
@@ -218,7 +233,7 @@
                                         <h5 class="card-title" style="color: var(--accent-main);">${item.title}</h5>
                                         <h6 class="card-subtitle mb-2 text-muted">Section: ${item.section}</h6>
                                         <p class="card-text small mt-3">
-                                            <span class="badge" style="background-color: var(--accent-bg); color: var(--accent-main);">Area: ${item.area}</span><br>
+                                            <span class="badge" style="background-color: var(--accent-bg); color: var(--accent-main);">${item.area}</span><br>
                                             <span class="text-secondary">Last Updated: ${item.date}</span>
                                         </p>
                                     </div>
@@ -274,10 +289,17 @@
                             extendedTitle.textContent = title;
                             contentContainer.innerHTML = '<div class="content-wrapper text-center text-muted">Loading content...</div>';
 
-                            // 5.1. Update the layout: Tiles column shrinks, Extended View appears
+                            // 5.1. Update the layout
+                            // On desktop: Tiles column shrinks (col-lg-5), Extended View appears (col-lg-5)
                             mainContentArea.className = 'col-md-9 col-lg-5 p-4'; 
-                            extendedPanel.className = 'col-md-9 col-lg-5 p-4 border-start'; 
+                            extendedPanel.className = 'col-12 col-lg-5 p-4 border-start'; 
                             
+                            // On mobile: Hide the tiles area completely (d-none-mobile is a custom class)
+                            if (window.innerWidth < 992) {
+                                mainContentArea.classList.add('d-none-mobile');
+                            }
+
+
                             // 5.2. Fetch content and inject
                             fetch(url)
                                 .then(response => {
@@ -289,12 +311,10 @@
                                 .then(html => {
                                     const parser = new DOMParser();
                                     const doc = parser.parseFromString(html, 'text/html');
-                                    // Search for the element that contains the main content
                                     const contentBody = doc.body; 
 
                                     // IMPORTANT: We inject the entire body content here
                                     if (contentBody) {
-                                        // Wrap the content body in the style wrapper
                                         contentContainer.innerHTML = `<div class="content-wrapper">${contentBody.innerHTML}</div>`;
                                         extendedPanel.scrollTo(0, 0); 
                                     } else {
