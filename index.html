@@ -5,53 +5,101 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Internal Tools Hub</title>
     <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     
     <style>
-        /* Styles for light/dark mode and layout */
-        :root { --bs-body-bg: #f8f9fa; }
-        [data-bs-theme="dark"] { --bs-body-bg: #212529; }
-        body { background-color: var(--bs-body-bg); transition: background-color 0.3s; }
-        .tile-card { cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; min-height: 180px; }
-        .tile-card:hover { transform: translateY(-3px); box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2) !important; }
-        .sidebar { position: sticky; top: 0; height: 100vh; }
+        /* 1. Custom Color Palettes (Based on your procedure file's CSS) */
+        :root {
+            /* Light Mode Defaults */
+            --bg-page: #ffffff;
+            --bg-card: #f9fafb;
+            --text-main: #1f2937;
+            --text-secondary: #4b5563;
+            --accent-main: #4F46E5; /* Indigo */
+            --accent-bg: #4F46E520; 
+            /* Bootstrap overrides */
+            --bs-body-bg: var(--bg-page);
+            --bs-body-color: var(--text-main);
+            --bs-card-bg: var(--bg-card);
+        }
+
+        [data-bs-theme="dark"] {
+            /* Dark Mode Overrides */
+            --bg-page: #1f2937;
+            --bg-card: #374151;
+            --text-main: #f9fafb;
+            --text-secondary: #d1d5db;
+            --accent-main: #818CF8;
+            --accent-bg: #818CF820; 
+            
+            --bs-body-bg: var(--bg-page);
+            --bs-body-color: var(--text-main);
+            --bs-card-bg: var(--bg-card);
+        }
         
-        /* New styles for the extended content column */
+        /* 2. Layout and Component Styling */
+        body { 
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s;
+        }
+        .sidebar { 
+            position: sticky; top: 0; height: 100vh;
+            background-color: var(--bg-card) !important;
+            color: var(--text-main);
+        }
+        .sidebar .nav-link {
+            color: var(--text-secondary);
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            color: var(--accent-main);
+            background-color: var(--accent-bg);
+            border-radius: 4px;
+        }
+        
+        .tile-card { 
+            cursor: pointer; 
+            border: 1px solid var(--text-secondary)20;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; 
+            min-height: 180px; 
+        }
+        .tile-card:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2) !important;
+            border-color: var(--accent-main);
+        }
+
+        /* 3. Extended Content Panel (New Column) */
         #extended-content-panel {
             overflow-y: auto; 
             max-height: 100vh;
             position: sticky; 
             top: 0;
             padding-bottom: 20px !important;
+            background-color: var(--bg-page); /* Matches body background */
         }
         
-        /* Ensures content loads cleanly */
-        #extended-content-panel .content-wrapper {
-            background-color: var(--bs-body-bg);
+        /* Wrapper style to mimic the procedure file's content */
+        .content-wrapper {
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 0 10px rgba(0,0,0,0.1); /* Slight lift */
+            background-color: var(--bg-card); /* Inner content background */
+            color: var(--text-main);
+        }
+        .content-wrapper h1, .content-wrapper h2, .content-wrapper h3 {
+            color: var(--accent-main);
+            border-bottom: 1px solid var(--text-secondary)10;
+            padding-bottom: 5px;
+            margin-top: 1.5rem;
         }
 
-        /* Responsive scaling */
-        #extended-content-panel img { max-width: 100%; height: auto; }
-        #extended-content-panel table { width: 100%; }
-
-        /* Hide the extended view on small screens to avoid squishing */
+        /* Responsive handling */
         @media (max-width: 991.98px) {
             #extended-content-panel {
-                position: relative;
-                max-height: none;
-                order: 3;
-                width: 100%;
-                padding: 0 1rem;
+                position: relative; max-height: none; order: 3; width: 100%; padding: 0 1rem;
             }
-            #main-content-area {
-                order: 2;
-            }
-            /* Main content area takes full width when extended panel is shown on small screen */
-            #main-content-area.col-md-6 { 
-                width: 100% !important; 
-            }
+            #main-content-area { order: 2; }
+            #main-content-area.col-md-6 { width: 100% !important; }
         }
 
     </style>
@@ -66,7 +114,9 @@
             const setTheme = (theme) => {
                 document.documentElement.setAttribute('data-bs-theme', theme);
             }
+            // Set initial theme
             setTheme(getPreferredTheme());
+            // Listen for changes
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
                  setTheme(e.matches ? 'dark' : 'light');
             });
@@ -76,9 +126,9 @@
     <div class="container-fluid">
         <div class="row">
             
-            <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-none d-md-block bg-body-tertiary sidebar p-3 border-end">
+            <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-none d-md-block sidebar p-3 border-end">
                 <div class="position-sticky pt-3">
-                    <h1 class="h4 mb-4 text-primary">🛠 Tools Hub</h1>
+                    <h1 class="h4 mb-4" style="color: var(--accent-main);">🛠 Hub</h1>
                     <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted text-uppercase">
                         <span>Sections (Filter)</span>
                     </h6>
@@ -88,7 +138,7 @@
 
             <main id="main-content-area" class="col-md-9 col-lg-10 p-4">
                 <header class="pb-4 mb-4 border-bottom d-block d-md-none">
-                     <h1 class="h3 mb-0 text-primary">🛠 Tools Hub</h1>
+                     <h1 class="h3 mb-0" style="color: var(--accent-main);">🛠 Hub</h1>
                 </header>
                 
                 <h2 class="mb-4" id="main-content-title">All Procedures</h2>
@@ -102,8 +152,8 @@
             </main>
             
             <aside id="extended-content-panel" class="d-none col-lg-5 p-4 border-start">
-                <h3 class="mb-3 text-primary" id="extended-title"></h3>
-                <button id="close-extended-view" class="btn btn-sm btn-outline-secondary mb-3 d-lg-none" type="button">
+                <h3 class="mb-3" style="color: var(--accent-main);" id="extended-title"></h3>
+                <button id="close-extended-view" class="btn btn-sm mb-3 d-lg-none" style="color: var(--accent-main); border-color: var(--accent-main);" type="button">
                     <span class="me-2">&larr;</span> Back to Tiles
                 </button>
                 <div id="content-container">
@@ -128,7 +178,7 @@
 
             const dataFile = 'pages.json'; 
 
-            // Function to reset the layout to only show tiles
+            // Function to reset the layout to only show tiles (Full Width)
             const resetLayout = () => {
                 mainContentArea.className = 'col-md-9 col-lg-10 p-4';
                 extendedPanel.classList.add('d-none');
@@ -150,7 +200,7 @@
                     loadingMessage.style.display = 'none';
                     const uniqueSections = new Set();
                     
-                    // Sort data by Section, then by Date (newest first)
+                    // Sort data
                     procedureData.sort((a, b) => {
                         if (a.section < b.section) return -1;
                         if (a.section > b.section) return 1;
@@ -161,20 +211,19 @@
                     procedureData.forEach(item => {
                         uniqueSections.add(item.section);
                         
-                        // Tile HTML generation (Small View) - data-url now used for fetching
                         const tileHtml = `
                             <div class="col tile-item" data-section="${item.section.replace(/\s/g, '-').toLowerCase()}">
                                 <div class="card tile-card shadow h-100" data-url="${item.file}" data-title="${item.title}">
                                     <div class="card-body">
-                                        <h5 class="card-title text-primary">${item.title}</h5>
+                                        <h5 class="card-title" style="color: var(--accent-main);">${item.title}</h5>
                                         <h6 class="card-subtitle mb-2 text-muted">Section: ${item.section}</h6>
                                         <p class="card-text small mt-3">
-                                            <span class="badge bg-secondary me-2">Area: ${item.area}</span><br>
-                                            <span class="text-muted">Last Updated: ${item.date}</span>
+                                            <span class="badge" style="background-color: var(--accent-bg); color: var(--accent-main);">Area: ${item.area}</span><br>
+                                            <span class="text-secondary">Last Updated: ${item.date}</span>
                                         </p>
                                     </div>
                                     <div class="card-footer text-end">
-                                        <small class="text-primary">View Procedure (Extended) &rarr;</small>
+                                        <small style="color: var(--accent-main);">View Procedure &rarr;</small>
                                     </div>
                                 </div>
                             </div>
@@ -182,21 +231,21 @@
                         tileContainer.insertAdjacentHTML('beforeend', tileHtml);
                     });
 
-                    // 3. Generate Navigation Links (Filtering) - Logic remains the same
-                    const allProceduresLink = `<li class="nav-item"><a class="nav-link active filter-link" aria-current="page" href="#" data-section="all"><span class="me-2">&#x23EC;</span> All Procedures</a></li>`;
+                    // 3. Generate Navigation Links (Filtering)
+                    const allProceduresLink = `<li class="nav-item"><a class="nav-link active filter-link" aria-current="page" href="#" data-section="all"><span class="me-2">#</span> All Procedures</a></li>`;
                     sectionNav.insertAdjacentHTML('beforeend', allProceduresLink);
 
                     uniqueSections.forEach(section => {
                         const sectionId = section.replace(/\s/g, '-').toLowerCase();
-                        const navItem = `<li class="nav-item"><a class="nav-link filter-link" href="#" data-section="${sectionId}"><span class="me-2">&#x1F4DA;</span> ${section}</a></li>`;
+                        const navItem = `<li class="nav-item"><a class="nav-link filter-link" href="#" data-section="${sectionId}"><span class="me-2">📄</span> ${section}</a></li>`;
                         sectionNav.insertAdjacentHTML('beforeend', navItem);
                     });
                     
-                    // 4. Filtering Logic - Logic remains the same
+                    // 4. Filtering Logic 
                     document.querySelectorAll('.filter-link').forEach(link => {
                         link.addEventListener('click', function(e) {
                             e.preventDefault();
-                            resetLayout(); // Reset the view when filtering
+                            resetLayout(); // Reset the content view when filtering
                             document.querySelectorAll('.filter-link').forEach(l => l.classList.remove('active'));
                             this.classList.add('active');
                             
@@ -214,7 +263,7 @@
                         });
                     });
 
-                    // 5. NEW: Extended View Logic (Loads Content into a Column)
+                    // 5. Extended View Logic (Loads Content into a Column)
                     document.querySelectorAll('.tile-card').forEach(tile => {
                         tile.addEventListener('click', function(e) {
                             e.preventDefault();
@@ -225,10 +274,8 @@
                             extendedTitle.textContent = title;
                             contentContainer.innerHTML = '<div class="content-wrapper text-center text-muted">Loading content...</div>';
 
-                            // 5.1. Update the layout
-                            // Shrink Tiles column
+                            // 5.1. Update the layout: Tiles column shrinks, Extended View appears
                             mainContentArea.className = 'col-md-9 col-lg-5 p-4'; 
-                            // Show Extended View column
                             extendedPanel.className = 'col-md-9 col-lg-5 p-4 border-start'; 
                             
                             // 5.2. Fetch content and inject
@@ -240,36 +287,35 @@
                                     return response.text();
                                 })
                                 .then(html => {
-                                    // Use DOMParser to safely extract only the content wrapper
                                     const parser = new DOMParser();
                                     const doc = parser.parseFromString(html, 'text/html');
-                                    // Assumes your content is wrapped in <div class="content-wrapper">...</div>
-                                    const contentWrapper = doc.querySelector('.content-wrapper');
+                                    // Search for the element that contains the main content
+                                    const contentBody = doc.body; 
 
-                                    if (contentWrapper) {
-                                        // The outer div is needed for styling/scrolling
-                                        contentContainer.innerHTML = `<div class="content-wrapper">${contentWrapper.innerHTML}</div>`;
+                                    // IMPORTANT: We inject the entire body content here
+                                    if (contentBody) {
+                                        // Wrap the content body in the style wrapper
+                                        contentContainer.innerHTML = `<div class="content-wrapper">${contentBody.innerHTML}</div>`;
                                         extendedPanel.scrollTo(0, 0); 
                                     } else {
-                                        contentContainer.innerHTML = `<div class="content-wrapper text-danger">Error: Could not find content wrapper in ${url}. Please wrap the content in your HTML file with <code>&lt;div class="content-wrapper"&gt;...&lt;/div&gt;</code>.</div>`;
+                                        contentContainer.innerHTML = `<div class="content-wrapper text-danger">Error: Could not load the document body.</div>`;
                                     }
                                 })
                                 .catch(error => {
                                     console.error('Content Load Error:', error);
-                                    contentContainer.innerHTML = `<div class="content-wrapper text-danger">Error loading content: **${error.message}**. Check that the filename (<code>${url}</code>) is exactly correct (case-sensitive).</div>`;
+                                    contentContainer.innerHTML = `<div class="content-wrapper text-danger">Error loading content: **${error.message}**. Check that the filename is exactly correct (case-sensitive).</div>`;
                                 });
                         });
                     });
 
                 })
                 .catch(error => {
-                    // This error message is visible in the main content area
                     console.error('Data Load Error:', error);
                     let errorMessage = 'Could not load data. Check the browser console (F12) for the exact error.';
                     if (error.message.includes('404')) {
-                         errorMessage = `**ERROR: File Not Found (404)**. Ensure your live file is named exactly <code>pages.json</code> (case-sensitive) in the root directory.`;
+                         errorMessage = `**ERROR: File Not Found (404)**. Ensure your live file is named exactly <code>pages.json</code>.`;
                     } else if (error.message.includes('SyntaxError')) {
-                         errorMessage = `**ERROR: Invalid JSON Syntax**. Check <code>pages.json</code> for missing commas, quotes, or brackets.`;
+                         errorMessage = `**ERROR: Invalid JSON Syntax**. Check <code>pages.json</code> for errors.`;
                     }
                     loadingMessage.innerHTML = `<span class="text-danger">${errorMessage}</span>`;
                 });
