@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="auto">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internal Tools Hub</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        /* Custom styles for light/dark mode variables and basic structure */
+        :root {
+            /* Light mode defaults */
+            --bs-body-bg: #f8f9fa;
+        }
+
+        [data-bs-theme="dark"] {
+            /* Dark mode variables */
+            --bs-body-bg: #212529; 
+        }
+
+        body {
+            background-color: var(--bs-body-bg);
+            transition: background-color 0.3s; /* Smooth transition for theme change */
+        }
+        
+        .tile-card {
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            min-height: 180px; /* Ensure tiles are a good size */
+        }
+        .tile-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        }
+        .sidebar {
+            /* Fix sidebar position for medium and larger screens */
+            position: sticky; 
+            top: 0;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+
+    <script>
+        (() => {
+            const getPreferredTheme = () => {
+                // Check system preference
+                return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+
+            const setTheme = (theme) => {
+                document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+
+            // Set initial theme based on preference
+            setTheme(getPreferredTheme());
+
+            // Listen for changes in system preference
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                 setTheme(e.matches ? 'dark' : 'light');
+            });
+        })();
+    </script>
+    
+    <div class="container-fluid">
+        <div class="row">
+            
+            <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-none d-md-block bg-body-tertiary sidebar p-3 border-end">
+                <div class="position-sticky pt-3">
+                    <h1 class="h4 mb-4 text-primary">🛠 Tools Hub</h1>
+                    
+                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
+                        <span>Sections (Filter)</span>
+                    </h6>
+                    <ul class="nav flex-column mb-2">
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="#knowledge-base">
+                                <span class="me-2">&#x1F4DA;</span> Knowledge Base
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <span class="me-2">&#x1F6E0;&#xFE0F;</span> Infrastructure
+                            </a>
+                        </li>
+                        </ul>
+                </div>
+            </nav>
+
+            <main class="col-md-9 ms-sm-auto col-lg-10 p-4">
+                <header class="pb-4 mb-4 border-bottom d-block d-md-none">
+                     <h1 class="h3 mb-0 text-primary">🛠 Tools Hub</h1>
+                </header>
+                
+                <h2 class="mb-4" id="knowledge-base">Knowledge Base</h2>
+                
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4" id="tile-container">
+                    
+                    <div class="col">
+                        <div class="card tile-card shadow h-100" onclick="window.location.href='knowledge_base_vs_code_organisation.html'">
+                            <div class="card-body">
+                                <h5 class="card-title text-primary">VS Code Organisation</h5>
+                                <h6 class="card-subtitle mb-2 text-muted">Section: Knowledge Base</h6>
+                                <p class="card-text small mt-3">
+                                    <span class="badge bg-secondary me-2">Area: Development Tools</span><br>
+                                    <span class="text-muted">Last Updated: 17 Nov 2025</span>
+                                </p>
+                            </div>
+                            <div class="card-footer text-end">
+                                <small class="text-primary">View Procedure &rarr;</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col">
+                        <div class="card tile-card shadow h-100" onclick="window.location.href='proc_server_setup.html'">
+                            <div class="card-body">
+                                <h5 class="card-title text-success">Initial Server Setup</h5>
+                                <h6 class="card-subtitle mb-2 text-muted">Section: Infrastructure</h6>
+                                <p class="card-text small mt-3">
+                                    <span class="badge bg-secondary me-2">Area: Cloud & Hosting</span><br>
+                                    <span class="text-muted">Last Updated: 05 Oct 2025</span>
+                                </p>
+                            </div>
+                            <div class="card-footer text-end">
+                                <small class="text-primary">View Procedure &rarr;</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script src="js/bootstrap.bundle.min.js"></script>
+    
+</body>
+</html>
