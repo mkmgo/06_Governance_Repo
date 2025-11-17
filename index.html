@@ -7,13 +7,9 @@
     <link href="css/bootstrap.min.css" rel="stylesheet">
     
     <style>
-        /* Custom styles for light/dark mode variables and basic structure */
-        :root {
-            --bs-body-bg: #f8f9fa;
-        }
-        [data-bs-theme="dark"] {
-            --bs-body-bg: #212529; 
-        }
+        /* Custom styles for theme variables and structure */
+        :root { --bs-body-bg: #f8f9fa; }
+        [data-bs-theme="dark"] { --bs-body-bg: #212529; }
         body {
             background-color: var(--bs-body-bg);
             transition: background-color 0.3s;
@@ -40,7 +36,7 @@
         }
         .modal-body-iframe {
             padding: 0;
-            height: calc(100vh - 120px); /* Adjust height for header/footer */
+            height: calc(100vh - 120px); 
         }
         .modal-body-iframe iframe {
             width: 100%;
@@ -77,12 +73,7 @@
                         <span>Sections (Filter)</span>
                     </h6>
                     <ul class="nav flex-column mb-2" id="section-nav">
-                        <li class="nav-item">
-                            <a class="nav-link active filter-link" aria-current="page" href="#" data-section="all">
-                                <span class="me-2">&#x23EC;</span> All Procedures
-                            </a>
-                        </li>
-                    </ul>
+                        </ul>
                 </div>
             </nav>
 
@@ -125,31 +116,32 @@
             const sectionNav = document.getElementById('section-nav');
             const mainTitle = document.getElementById('main-content-title');
             const loadingMessage = document.getElementById('loading-message');
-            const dataFile = 'pages/pages.json'; // The required manifest file
+            // Path corrected to root, based on your folder structure image:
+            const dataFile = 'pages.json'; 
 
             // 1. Fetch the JSON data
             fetch(dataFile)
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                        // Display error if the JSON file is missing or invalid
+                        throw new Error(`Error: Could not find or load ${dataFile}. Status: ${response.status}`);
                     }
                     return response.json();
                 })
-                .then(data => {
+                .then(procedureData => {
                     loadingMessage.style.display = 'none'; // Hide loading message
                     const uniqueSections = new Set();
                     
-                    // Sort data by Section, then by Title for organization
-                    data.sort((a, b) => {
+                    // Sort data by Section, then by Date (newest first)
+                    procedureData.sort((a, b) => {
                         if (a.section < b.section) return -1;
                         if (a.section > b.section) return 1;
-                        if (a.title < b.title) return -1;
-                        if (a.title > b.title) return 1;
-                        return 0;
+                        // Secondary sort by date (newest first)
+                        return new Date(b.date) - new Date(a.date);
                     });
 
                     // 2. Generate Tiles and Collect Sections
-                    data.forEach(item => {
+                    procedureData.forEach(item => {
                         // Add section to set for navigation generation
                         uniqueSections.add(item.section);
                         
@@ -161,80 +153,4 @@
                                         <h5 class="card-title text-primary">${item.title}</h5>
                                         <h6 class="card-subtitle mb-2 text-muted">Section: ${item.section}</h6>
                                         <p class="card-text small mt-3">
-                                            <span class="badge bg-secondary me-2">Area: ${item.area}</span><br>
-                                            <span class="text-muted">Last Updated: ${item.date}</span>
-                                        </p>
-                                    </div>
-                                    <div class="card-footer text-end">
-                                        <small class="text-primary">View Procedure (Extended) &rarr;</small>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                        tileContainer.insertAdjacentHTML('beforeend', tileHtml);
-                    });
-
-                    // 3. Generate Navigation Links (Filtering)
-                    uniqueSections.forEach(section => {
-                        const sectionId = section.replace(/\s/g, '-').toLowerCase();
-                        const navItem = `
-                            <li class="nav-item">
-                                <a class="nav-link filter-link" href="#" data-section="${sectionId}">
-                                    <span class="me-2">&#x1F4DA;</span> ${section}
-                                </a>
-                            </li>
-                        `;
-                        sectionNav.insertAdjacentHTML('beforeend', navItem);
-                    });
-                    
-                    // 4. Implement Filtering Logic
-                    document.querySelectorAll('.filter-link').forEach(link => {
-                        link.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            document.querySelectorAll('.filter-link').forEach(l => l.classList.remove('active'));
-                            this.classList.add('active');
-                            
-                            const filterSection = this.getAttribute('data-section');
-                            mainTitle.textContent = filterSection === 'all' ? 'All Procedures' : filterSection.replace(/-/g, ' ').toUpperCase().charAt(0) + filterSection.replace(/-/g, ' ').slice(1);
-                            
-                            document.querySelectorAll('.tile-item').forEach(tile => {
-                                const tileSection = tile.getAttribute('data-section');
-                                if (filterSection === 'all' || tileSection === filterSection) {
-                                    tile.style.display = 'block';
-                                } else {
-                                    tile.style.display = 'none';
-                                }
-                            });
-                        });
-                    });
-
-                })
-                .catch(error => {
-                    loadingMessage.innerHTML = `<span class="text-danger">Error loading procedures. Please ensure ${dataFile} exists and is valid.</span>`;
-                    console.error('Error fetching data:', error);
-                });
-
-            // 5. Modal Logic for Extended View
-            const contentModal = document.getElementById('contentModal');
-            const iframe = document.getElementById('procedureIframe');
-            const modalTitle = document.getElementById('contentModalLabel');
-
-            contentModal.addEventListener('show.bs.modal', function (event) {
-                const tile = event.relatedTarget;
-                
-                // Get URL and Title from the tile's data attributes
-                const url = tile.getAttribute('data-url');
-                const title = tile.querySelector('.card-title').textContent;
-
-                modalTitle.textContent = title;
-                iframe.src = url; // Load the external HTML file
-            });
-            
-            contentModal.addEventListener('hidden.bs.modal', function () {
-                iframe.src = ''; 
-                modalTitle.textContent = 'Procedure Details'; 
-            });
-        });
-    </script>
-</body>
-</html>
+                                            <span class="badge bg-secondary me-
